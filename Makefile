@@ -1,6 +1,6 @@
 # Example Usage:
 #  export TOOLCHAIN_PATH=/opt/homebrew/share/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64
-#  make VENDOR=Huawei MODEL="P8 Lite (alice)" ANDROID_VERSION=7.0
+#  make VENDOR=Huawei MODEL="P8 Lite (alice)" ANDROID_VERSION=7.0 PROJECT=examples/backlight_sine
 
 # Phone Parameters
 ifdef VENDOR # The vendor of the phone
@@ -23,8 +23,8 @@ else
 endif
 
 # Project Layout
-BUILD_DIR := ./bin/$(VENDOR)/$(MODEL)
 OBJECT_DIR := ./obj/$(VENDOR)/$(MODEL)
+BUILD_DIR := ./bin/$(VENDOR)/$(MODEL)
 
 # Android Version
 ifdef ANDROID_VERSION
@@ -60,20 +60,32 @@ CXX := $(TOOLCHAIN_PATH)/bin/clang++
 # Android Libraries
 ANDROID_LIB_PATH := $(TOOLCHAIN_PATH)/sysroot/usr/lib/$(ARCH_SHORT)-linux-android$(EABI)/$(API_LEVEL)
 
+# Project Path
+ifdef PROJECT
+
+PROJECT_OBJECT_DIR := $(PROJECT)/obj/$(VENDOR)/$(MODEL)
+
 # Project Layout
 INCLUDES := -I./include -I./libraries/tinyalsa/include -I./libraries -I.
 LIBRARIES := -lm -landroid -static-libstdc++ -L$(ANDROID_LIB_PATH)
 CSOURCES := $(wildcard core/*.c) $(wildcard libraries/*/*.c) $(wildcard libraries/*/*/*.c)
 CPPSOURCES := $(wildcard core/*.cpp) $(wildcard libraries/*/*.cpp) $(wildcard libraries/*/*/*.cpp)
+PROJECT_CSOURCES := $(wildcard $(PROJECT)/*.c) $(wildcard $(PROJECT)/*/*.c) $(wildcard $(PROJECT)/*/*/*.c)
+PROJECT_CPPSOURCES := $(wildcard $(PROJECT)/*.cpp) $(wildcard $(PROJECT)/*/*.cpp) $(wildcard $(PROJECT)/*/*/*.cpp)
 
 # We can't use quotes to escape makefile rule names, so we backslash-escape all the spaces
 OBJECT_DIR_ESCAPED := $(subst $() ,\ ,$(OBJECT_DIR))
+PROJECT_OBJECT_DIR_ESCAPED := $(subst $() ,\ ,$(PROJECT_OBJECT_DIR))
+
 # We define OBJECT_RULES with the escaping needed to reference the .o makefile rules
 # i.e., spaces backslash-escaped, parens not escaped
 OBJECT_RULES := $(addprefix $(OBJECT_DIR_ESCAPED)/, $(CSOURCES:.c=.o) $(CPPSOURCES:.cpp=.o))
+PROJECT_OBJECT_RULES := $(addprefix $(PROJECT_OBJECT_DIR_ESCAPED)/, $(PROJECT_CSOURCES:$(PROJECT)/%.c=%.o) $(PROJECT_CPPSOURCES:$(PROJECT)/%.cpp=%.o))
+
 # We define OBJECT_PATHS with the escaping needed to pass the list of .o files to the linker
 # i.e., each path surrounded by quotes, no other escaping done
 OBJECT_PATHS := $(addprefix "$(OBJECT_DIR)/, $(addsuffix ", $(CSOURCES:.c=.o) $(CPPSOURCES:.cpp=.o)))
+PROJECT_OBJECT_PATHS := $(addprefix "$(PROJECT_OBJECT_DIR)/, $(addsuffix ", $(PROJECT_CSOURCES:$(PROJECT)/%.c=%.o) $(PROJECT_CPPSOURCES:$(PROJECT)/%.cpp=%.o)))
 
 # Compiler Flags
 CCFLAGS := -target $(TARGET) $(NEON) -ffast-math
@@ -90,10 +102,22 @@ $(OBJECT_DIR_ESCAPED)/%.o: %.cpp
 	@mkdir -p "$(shell dirname "$@")"
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c "$^" -o "$@"
 
-build: $(OBJECT_RULES)
-	@mkdir  -p "$(BUILD_DIR)"
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o "$(BUILD_DIR)/ldsp" $(OBJECT_PATHS) $(LIBRARIES)
+$(PROJECT_OBJECT_DIR_ESCAPED)/%.o: $(PROJECT)/%.c
+	@mkdir -p "$(shell dirname "$@")"
+	$(CC) $(CPPFLAGS) $(CCFLAGS) -c "$^" -o "$@"
 
+$(PROJECT_OBJECT_DIR_ESCAPED)/%.o: $(PROJECT)/%.cpp
+	@mkdir -p "$(shell dirname "$@")"
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c "$^" -o "$@"
+
+build: $(OBJECT_RULES) $(PROJECT_OBJECT_RULES)
+	@mkdir  -p "$(BUILD_DIR)"
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o "$(BUILD_DIR)/ldsp" $(OBJECT_PATHS) $(PROJECT_OBJECT_PATHS) $(LIBRARIES)
+
+else
+build:
+	@echo "PROJECT is not set"
+endif
 else
 build:
 	@echo "TOOLCHAIN_PATH is not set"
