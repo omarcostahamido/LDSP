@@ -2,14 +2,53 @@
 #  export TOOLCHAIN_PATH=/opt/homebrew/share/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64
 #  make VENDOR=Huawei MODEL="P8 Lite (alice)" ANDROID_VERSION=7.0 PROJECT=examples/backlight_sine
 
-# Phone Parameters
 
-# The vendor of the phone (e.g. LG, Huawei)
+# === Command-Line Parameters ===
+
+# TOOLCHAIN_PATH: The path to the Android NDK toolchain
+ifdef TOOLCHAIN_PATH
+require_toolchain: ;
+else
+require_toolchain:
+	$(error TOOLCHAIN_PATH is not set)
+endif
+
+# VENDOR: The vendor of the phone (e.g. LG, Huawei)
+# MODEL: The specific model of the phone (e.g. G2 Mini (g2m), P8 Lite (alice))
 ifdef VENDOR
-
-# The specific model of the phone (e.g. G2 Mini (g2m), P8 Lite (alice))
 ifdef MODEL
+require_model: ;
+else
+require_model:
+	$(error MODEL is not set)
+endif
+else
+require_model:
+	$(error VENDOR is not set)
+endif
 
+# ANDROID_VERSION: The full, human-readable Android version of the phone, e.g. 5.1.1 or 7.0
+# This is used to determine the API level of the phone
+ifdef ANDROID_VERSION
+require_android_version: ;
+else
+require_android_version:
+	$(error ANDROID_VERSION is not set)
+endif
+
+# PROJECT: The path to the user's LDSP project which is currently being compiled
+# e.g. examples/hello_world
+ifdef PROJECT
+require_project: ;
+else
+require_project:
+	$(error PROJECT is not set)
+endif
+
+# === Build ===
+
+ifdef VENDOR
+ifdef MODEL
 # Path to the LDSP hardware configuration definition
 # This file stores information about the phone's processor and other hardware
 HW_CONFIG := ./phones/$(VENDOR)/$(MODEL)/ldsp_hw_config.json
@@ -30,6 +69,10 @@ else
 	EABI :=
 endif
 
+# Whether the phone has a NEON floating point unit,
+# which can be used to speed up float operations
+NEON_SUPPORT := $(shell grep 'supports neon floating point unit' "$(HW_CONFIG)" | cut -d \" -f 4)
+
 # This is where compiled parts of the LDSP library are stored
 # Caching these speeds up subsequent builds, but different phones
 # may require different versions of the library
@@ -38,8 +81,9 @@ OBJECT_DIR := ./obj/$(VENDOR)/$(MODEL)
 # We can't use quotes to escape makefile rule names, so we backslash-escape all the spaces
 OBJECT_DIR_ESCAPED := $(subst $() ,\ ,$(OBJECT_DIR))
 
-# The full, human-readable Android version of the phone, e.g. 5.1.1 or 7.0
-# This is used to determine the API level of the phone
+endif # ifdef MODEL
+endif # ifdef VENDOR
+
 ifdef ANDROID_VERSION
 
 # The three components of the Android version (x.y.z)
@@ -54,17 +98,14 @@ $(info Detected Android API level $(API_LEVEL))
 # The compilation target, determined by the phone's architecture and API level
 TARGET := $(ARCH_FULL)-linux-android$(EABI)$(API_LEVEL)
 
-# Whether the phone has a NEON floating point unit,
-# which can be used to speed up float operations
-NEON_SUPPORT := $(shell grep 'supports neon floating point unit' "$(HW_CONFIG)" | cut -d \" -f 4)
-
 ifeq ($(ARCH_FULL),aarch64) # aarch64 had neon active by default, no need to set flag
 	NEON :=
 else ifneq (,$(findstring $(NEON_SUPPORT), true yes 1 True Yes))
 	NEON := -mfpu=neon-fp16
 endif
 
-# The path to the Android NDK toolchain
+endif # ifdef ANDROID_VERSION
+
 ifdef TOOLCHAIN_PATH
 
 # The path to the C and C++ compilers used
@@ -73,6 +114,8 @@ CXX := $(TOOLCHAIN_PATH)/bin/clang++
 
 # The path to the Android API libraries for the phone's API level
 ANDROID_LIB_PATH := $(TOOLCHAIN_PATH)/sysroot/usr/lib/$(ARCH_SHORT)-linux-android$(EABI)/$(API_LEVEL)
+
+endif # ifdef TOOLCHAIN_PATH
 
 # Includes used by the LDSP library and the user's project
 INCLUDES := -I./include -I./libraries/tinyalsa/include -I./libraries -I.
@@ -87,14 +130,9 @@ CPPSOURCES := $(wildcard core/*.cpp) $(wildcard libraries/*/*.cpp) $(wildcard li
 # i.e., spaces backslash-escaped, parens not escaped
 OBJECT_RULES := $(addprefix $(OBJECT_DIR_ESCAPED)/, $(CSOURCES:.c=.o) $(CPPSOURCES:.cpp=.o))
 
-
 # We define OBJECT_PATHS with the escaping needed to pass the list of .o files to the linker
 # i.e., each path surrounded by quotes, no other escaping done
 OBJECT_PATHS := $(addprefix "$(OBJECT_DIR)/, $(addsuffix ", $(CSOURCES:.c=.o) $(CPPSOURCES:.cpp=.o)))
-
-# The path to the user's LDSP project which is currently being compiled
-# e.g. examples/hello_world
-ifdef PROJECT
 
 # The path to where the compiled executable will be stored
 BUILD_DIR := $(PROJECT)/bin/$(VENDOR)/$(MODEL)
@@ -119,7 +157,7 @@ CPPFLAGS := $(INCLUDES) -DAPI_LEVEL="$(API_LEVEL)"
 CXXFLAGS := -target $(TARGET) $(NEON) -ffast-math
 
 # We can't use $(dir ...) because it splits on spaces (even escaped ones :/)
-# so we use `dirname` instead
+# so we use `dirname` instead in the following rules
 
 # .c files within LDSP itself
 $(OBJECT_DIR_ESCAPED)/%.o: %.c
@@ -142,56 +180,31 @@ $(PROJECT_OBJECT_DIR_ESCAPED)/%.o: $(PROJECT)/%.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c "$^" -o "$@"
 
 # Build the LDSP library and the user's project
-build: $(OBJECT_RULES) $(PROJECT_OBJECT_RULES)
+build: require_toolchain require_model require_android_version require_project $(OBJECT_RULES) $(PROJECT_OBJECT_RULES)
 	@mkdir  -p "$(BUILD_DIR)"
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o "$(BUILD_DIR)/ldsp" $(OBJECT_PATHS) $(PROJECT_OBJECT_PATHS) $(LIBRARIES)
 
-else
-build:
-	@echo "PROJECT is not set"
-endif
-else
-build:
-	@echo "TOOLCHAIN_PATH is not set"
-endif
-else
-build:
-	@echo "API_LEVEL is not set"
-endif
+# === Push  ===
 
-push:
+push: require_model require_project
 	@adb root
 	@adb push "$(HW_CONFIG)" /data/ldsp/ldsp_hw_config.json
 	@adb push "$(BUILD_DIR)/ldsp" /data/ldsp/ldsp
 
-push_shell:
+push_shell: require_model require_project
 	@adb push "$(HW_CONFIG)" /sdcard/ldsp/ldsp_hw_config.json
 	@adb push "$(BUILD_DIR)/ldsp" /sdcard/ldsp/ldsp
 
-clean:
+# === Clean ===
+
+clean: require_model require_project
 	@rm -rf "$(BUILD_DIR)"
 	@rm -rf "$(OBJECT_DIR)"
+	@rm -rf "$(PROJECT_OBJECT_DIR)"
 
-else
-build:
-	@echo "MODEL is not set"
-push:
-	@echo "MODEL is not set"
-push_shell:
-	@echo "MODEL is not set"
-clean:
-	@echo "MODEL is not set"
-endif
-else
-build:
-	@echo "VENDOR is not set"
-push:
-	@echo "VENDOR is not set"
-push_shell:
-	@echo "VENDOR is not set"
-clean:
-	@echo "VENDOR is not set"
-endif
+cleanProject: require_project
+	@rm -rf "$(PROJECT)/bin"
+	@rm -rf "$(PROJECT)/obj"
 
 cleanAll:
 	@rm -rf ./bin
@@ -200,4 +213,4 @@ cleanAll:
 run:
 	adb shell "cd /data/ldsp/ && ./ldsp"
 
-.PHONY: build push push_shell clean cleanAll run
+.PHONY: require_toolchain require_model require_android_version require_project build push push_shell clean cleanAll run
