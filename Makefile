@@ -137,19 +137,24 @@ OBJECT_PATHS := $(addprefix "$(OBJECT_DIR)/, $(addsuffix ", $(CSOURCES:.c=.o) $(
 # The path to where the compiled executable will be stored
 BUILD_DIR := $(PROJECT)/bin/$(VENDOR)/$(MODEL)
 
+# The project directory, with spaces backslash-escaped
+PROJECT_ESCAPED := $(subst $() ,\ ,$(PROJECT))
+
 # The directory where object files for the user's project are stored
 PROJECT_OBJECT_DIR := $(PROJECT)/obj/$(VENDOR)/$(MODEL)
 PROJECT_OBJECT_DIR_ESCAPED := $(subst $() ,\ ,$(PROJECT_OBJECT_DIR))
 
 # Sources for .c and .cpp files in the user's project
-PROJECT_CSOURCES := $(wildcard $(PROJECT)/*.c) $(wildcard $(PROJECT)/*/*.c) $(wildcard $(PROJECT)/*/*/*.c)
-PROJECT_CPPSOURCES := $(wildcard $(PROJECT)/*.cpp) $(wildcard $(PROJECT)/*/*.cpp) $(wildcard $(PROJECT)/*/*/*.cpp)
+PROJECT_CSOURCES := $(shell find $(PROJECT_ESCAPED) -type f -name "*.c" | sed 's/ /\\ /g')
+PROJECT_CPPSOURCES := $(shell find $(PROJECT_ESCAPED) -type f -name "*.cpp" | sed 's/ /\\ /g')
 
 # The relative path to all of the .o files required to build the user's project
-PROJECT_OBJECTS := $(PROJECT_CSOURCES:$(PROJECT)/%.c=%.o) $(PROJECT_CPPSOURCES:$(PROJECT)/%.cpp=%.o)
+PROJECT_OBJECTS := $(PROJECT_CSOURCES:$(PROJECT_ESCAPED)/%.c=%.o) $(PROJECT_CPPSOURCES:$(PROJECT_ESCAPED)/%.cpp=%.o)
 
 PROJECT_OBJECT_RULES := $(addprefix $(PROJECT_OBJECT_DIR_ESCAPED)/, $(PROJECT_OBJECTS))
 PROJECT_OBJECT_PATHS := $(addprefix "$(PROJECT_OBJECT_DIR)/, $(addsuffix ", $(PROJECT_OBJECTS)))
+
+$(info $(PROJECT_CPPSOURCES) $(PROJECT_OBJECTS))
 
 # Compiler Flags
 CCFLAGS := -target $(TARGET) $(NEON) -ffast-math
@@ -170,12 +175,12 @@ $(OBJECT_DIR_ESCAPED)/%.o: %.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c "$^" -o "$@"
 
 # .c files within the user's project
-$(PROJECT_OBJECT_DIR_ESCAPED)/%.o: $(PROJECT)/%.c
+$(PROJECT_OBJECT_DIR_ESCAPED)/%.o: $(PROJECT_ESCAPED)/%.c
 	@mkdir -p "$(shell dirname "$@")"
 	$(CC) $(CPPFLAGS) $(CCFLAGS) -c "$^" -o "$@"
 
 # .cpp files within the user's project
-$(PROJECT_OBJECT_DIR_ESCAPED)/%.o: $(PROJECT)/%.cpp
+$(PROJECT_OBJECT_DIR_ESCAPED)/%.o: $(PROJECT_ESCAPED)/%.cpp
 	@mkdir -p "$(shell dirname "$@")"
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c "$^" -o "$@"
 
