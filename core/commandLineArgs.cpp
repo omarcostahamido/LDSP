@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -62,7 +62,7 @@ void LDSP_usage(const char *argv)
 
 int LDSP_parseArguments(int argc, char** argv, LDSPinitSettings *settings)
 {
-    // first populate format map 
+    // first populate format map
     for(int i=0; i<=(int)LDSP_pcm_format::MAX; i++)
     {
         LDSP_pcm_format format = (LDSP_pcm_format::_enum)LDSP_pcm_format::_from_index(i);
@@ -96,7 +96,7 @@ int LDSP_parseArguments(int argc, char** argv, LDSPinitSettings *settings)
 
 	optparse_init(&opts, argv);
 	while ((c = optparse_long(&opts, long_options, NULL)) != -1) {
-		switch (c) 
+		switch (c)
         {
 			case 'c':
 				settings->card = atoi(opts.optarg);

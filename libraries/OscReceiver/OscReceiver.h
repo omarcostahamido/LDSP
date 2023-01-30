@@ -1,6 +1,5 @@
-// This code is based on the code credited below, but it has been modified
-// further by Victor Zappi
- 
+// This code is based on the code credited below, but it has been modified further
+
  /*
  ___  _____ _        _
 | __ )| ____| |      / \
@@ -14,7 +13,7 @@ http://bela.io
 
 A project of the Augmented Instruments Laboratory within the Centre for Digital Music at Queen Mary University of London. http://instrumentslab.org
 
-(c) 2016-2020 Augmented Instruments Laboratory: Andrew McPherson, Astrid Bin, Liam Donovan, Christian Heinrichs, Robert Jack, Giulio Moro, Laurel Pardue, Victor Zappi. All rights reserved.
+(c) 2016-2020 Augmented Instruments Laboratory. All rights reserved.
 
 The Bela software is distributed under the GNU Lesser General Public License (LGPL 3.0), available here: https://www.gnu.org/licenses/lgpl-3.0.txt */
 

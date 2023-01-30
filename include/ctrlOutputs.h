@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -40,7 +40,7 @@ static const string LDSP_analog_ctrlOutput[chn_cout_count] = {
     "led",
     "led-red",
     "led-green",
-    "led-blue", 
+    "led-blue",
     "buttons-backlight",
     "vibration" // vibration is time-based and what we pass is the duration of the vibration [ms]
 };

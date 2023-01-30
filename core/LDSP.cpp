@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -49,6 +49,6 @@ void LDSP_defaultSettings(LDSPinitSettings *settings)
     settings->pathIn = ""; // default is first input path in hw config json file, typically built-in mic
     settings->outputOnly = 0; // full duplex engine by default
     settings->verbose = 1; //0; // shut up by default
-    settings->deviceOutId = ""; // if not specified, extracted at run-time //VIC! remove 
-    settings->deviceInId = ""; // if not specified, extracted at run-time 
+    settings->deviceOutId = ""; // if not specified, extracted at run-time //VIC! remove
+    settings->deviceInId = ""; // if not specified, extracted at run-time
 }

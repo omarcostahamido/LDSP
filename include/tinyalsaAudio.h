@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -84,7 +84,7 @@ struct LDSPinternalContext {
 	uint32_t audioInChannels;
 	uint32_t audioOutChannels;
 	float audioSampleRate;
-    float *sensors; 
+    float *sensors;
     int *ctrlInputs;
     float *ctrlOutputs;
     uint32_t sensorChannels;
@@ -108,13 +108,13 @@ struct LDSPinternalContext {
 // wrapper of tinyalsa pmc_format, to ensure compatibility with older and newer versions of tinyalsa
 // this is a special wrapper, that permits to print the ENUM ad to cycle via indices
 //VIC note that until we update the source of tinnyalsa to latest version, BE entries will not work
-ENUM(LDSP_pcm_format, short, 
+ENUM(LDSP_pcm_format, short,
     //INVALID = -1,
     S16_LE = 0, /** Signed 16-bit, little endian */
-    S32_LE,     /** Signed, 32-bit, little endian */ // last supported format from Android 4.0 ICE_CREAM_SANDWICH [API level 14] to Android 4.2.2 JELLY_BEAN_MR1 [API level 17] 
+    S32_LE,     /** Signed, 32-bit, little endian */ // last supported format from Android 4.0 ICE_CREAM_SANDWICH [API level 14] to Android 4.2.2 JELLY_BEAN_MR1 [API level 17]
     S8,         /** Signed, 8-bit */
-    S24_LE,     /** Signed, 24-bit (32-bit in memory), little endian */ // last supported format from Android 4.3 JELLY_BEAN_MR2 [API level 18] to Android 4.4 KITKAT [API level 19] 
-    S24_3LE,    /** Signed, 24-bit, little endian */ // last supported format from Android 5.0 LOLLIPOP [API level 21] to Android 13 TIRAMISU [API level 33] 
+    S24_LE,     /** Signed, 24-bit (32-bit in memory), little endian */ // last supported format from Android 4.3 JELLY_BEAN_MR2 [API level 18] to Android 4.4 KITKAT [API level 19]
+    S24_3LE,    /** Signed, 24-bit, little endian */ // last supported format from Android 5.0 LOLLIPOP [API level 21] to Android 13 TIRAMISU [API level 33]
     S16_BE,     /** Signed, 16-bit, big endian */ // from here on, formats supported by tinyalsa nut not by current Android implmentaitons of libtinyalsa
     S24_BE,     /** Signed, 24-bit (32-bit in memory), big endian */
     S24_3BE,    /** Signed, 24-bit, big endian */

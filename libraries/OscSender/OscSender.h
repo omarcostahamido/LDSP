@@ -1,6 +1,5 @@
-// This code is based on the code credited below, but it has been modified
-// further by Victor Zappi
- 
+// This code is based on the code credited below, but it has been modified further
+
  /*
  ___  _____ _        _
 | __ )| ____| |      / \
@@ -14,7 +13,7 @@ http://bela.io
 
 A project of the Augmented Instruments Laboratory within the Centre for Digital Music at Queen Mary University of London. http://instrumentslab.org
 
-(c) 2016-2020 Augmented Instruments Laboratory: Andrew McPherson, Astrid Bin, Liam Donovan, Christian Heinrichs, Robert Jack, Giulio Moro, Laurel Pardue, Victor Zappi. All rights reserved.
+(c) 2016-2020 Augmented Instruments Laboratory. All rights reserved.
 
 The Bela software is distributed under the GNU Lesser General Public License (LGPL 3.0), available here: https://www.gnu.org/licenses/lgpl-3.0.txt */
 
@@ -42,7 +41,7 @@ namespace oscpkt{
 /**
  * \brief OscSender provides functions for sending OSC messages from Bela.
  *
- * Functionality is provided for sending messages with int, float, bool, 
+ * Functionality is provided for sending messages with int, float, bool,
  * std::string and binary blob arguments. Sending a stream of floats is
  * also supported.
  *
@@ -53,7 +52,7 @@ class OscSender{
 		OscSender();
 		OscSender(int port, std::string ip_address=std::string("127.0.0.1"));
 		~OscSender();
-		
+
         /**
 		 * \brief Initialises OscSender
 		 *
@@ -66,7 +65,7 @@ class OscSender{
 		 *
 		 */
 		void setup(int port, std::string ip_address=std::string("127.0.0.1"));
-		
+
 		/**
 		 * \brief Creates a new OSC message
 		 *
@@ -139,7 +138,7 @@ class OscSender{
 		void send(const oscpkt::Message& extMsg);
 
 		std::unique_ptr<UdpClient> socket;
-	
+
 		std::unique_ptr<oscpkt::Message> msg;
 		std::unique_ptr<oscpkt::PacketWriter> pw;
 		std::unique_ptr<oscpkt::PacketWriter> pw_immediate;
@@ -149,13 +148,13 @@ class OscSender{
 		//VIC
 
 		void sendNow();
-		void sendNow(const oscpkt::Message& extMsg);	
+		void sendNow(const oscpkt::Message& extMsg);
 
 		unsigned int prioOrder = OscSenderPrioOrder;
 		bool stop = false;
 		std::queue<oscpkt::Message> queue;
 		pthread_t send_thread;
-		
+
 		static void *send_thread_func(void*);
 		void empty_queue();
 };

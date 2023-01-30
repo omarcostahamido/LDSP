@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -82,10 +82,10 @@ void LDSP_cleanupCtrlOutputs()
 
 
 bool ctrlOutputAutoFill_ctrl(int out, shared_ptr<ctrlOutputKeywords> keywords, string &control_file)
-{        
+{
     DIR* directory;
     string path;
-    
+
     // first try to open one of the possible container folders
     for(string folder : keywords->folders[out])
     {
@@ -102,11 +102,11 @@ bool ctrlOutputAutoFill_ctrl(int out, shared_ptr<ctrlOutputKeywords> keywords, s
         return false;
     }
 
-    // if we found folder, 
+    // if we found folder,
     // search for a subfolder whose name contains one of the strings
     dirent* entry;
     string content = "";
-    while( (entry = readdir(directory)) != nullptr ) 
+    while( (entry = readdir(directory)) != nullptr )
     {
         string d_name = string(entry->d_name);
         for(string str : keywords->subFolders_strings[out])
@@ -117,7 +117,7 @@ bool ctrlOutputAutoFill_ctrl(int out, shared_ptr<ctrlOutputKeywords> keywords, s
 
             size_t found = d_name.find(str);
             // if found, we append subfolder to path
-            if (found != string::npos) 
+            if (found != string::npos)
             {
                 content = path + "/" + d_name;
                 break;
@@ -140,7 +140,7 @@ bool ctrlOutputAutoFill_ctrl(int out, shared_ptr<ctrlOutputKeywords> keywords, s
     directory = opendir(path.c_str());
     if (directory == nullptr)
     {
-        closedir(directory); 
+        closedir(directory);
         fprintf(stderr, "Control output \"%s\", cannot open file \"%s\" during autofill!\n", LDSP_analog_ctrlOutput[out].c_str(), path.c_str());
         return false;
     }
@@ -148,7 +148,7 @@ bool ctrlOutputAutoFill_ctrl(int out, shared_ptr<ctrlOutputKeywords> keywords, s
     //TODO complete case of vibration with activate+duration
     // also in the write function!!!
     content = "";
-    while( (entry = readdir(directory)) != nullptr ) 
+    while( (entry = readdir(directory)) != nullptr )
     {
         string d_name = string(entry->d_name);
         // in most cases, there is a single possible name for the control file
@@ -167,14 +167,14 @@ bool ctrlOutputAutoFill_ctrl(int out, shared_ptr<ctrlOutputKeywords> keywords, s
     // cannot find file ):
     if(content == "")
     {
-        closedir(directory);        
+        closedir(directory);
         return false;
     }
 
     // this is the full path to the control file!
     control_file = path + content;
-    
-    closedir(directory);     
+
+    closedir(directory);
 
     return true;
 }
@@ -189,18 +189,18 @@ void ctrlOutputAutoFill_scale(int out, shared_ptr<ctrlOutputKeywords> keywords, 
     // search for max file in same dir where control file is
     // to obtain dir path, remove control file name from path!
     string path = std::regex_replace(control_file, std::regex("/"+keywords->files[out][0]), "");
-    
+
     DIR* directory = opendir(path.c_str());
     if (directory == nullptr)
     {
-        closedir(directory); 
+        closedir(directory);
         fprintf(stderr, "Control output \"%s\", cannot open file \"%s\" during autofill!\n", LDSP_analog_ctrlOutput[out].c_str(), path.c_str());
         return;
     }
 
     // then check if the max file is here too!
     dirent* entry;
-    while( (entry = readdir(directory)) != nullptr ) 
+    while( (entry = readdir(directory)) != nullptr )
     {
         string d_name = string(entry->d_name);
         if(d_name == keywords->files[out][1])
@@ -208,9 +208,9 @@ void ctrlOutputAutoFill_scale(int out, shared_ptr<ctrlOutputKeywords> keywords, 
             scale_file = path + "/" + d_name;
             break;
         }
-    }            
-    
-    closedir(directory); 
+    }
+
+    closedir(directory);
 }
 
 
@@ -237,7 +237,7 @@ int initCtrlOutputs(string **ctrlOutputsFiles)
             if( !ctrlOutputAutoFill_ctrl(out, keywords, ctrlOutputsFiles[DEVICE_CTRL_FILE][out]) )
             {
                 ctrlOutput.configured = false;
-                
+
                 if(ctrlOutputsVerbose)
                     printf("\t%s not configured\n", LDSP_analog_ctrlOutput[out].c_str());
 
@@ -249,30 +249,30 @@ int initCtrlOutputs(string **ctrlOutputsFiles)
             }
             autoConfig_ctrl = true;
         }
-      
+
         string fileName = ctrlOutputsFiles[DEVICE_CTRL_FILE][out];
 
         // configured
         ctrlOutput.configured = true;
-        
+
         // initial value
         readFile.open(fileName);
         if(!readFile.is_open())
         {
             fprintf(stderr, "Control output \"%s\", cannot open associated control file \"%s\"\n", LDSP_analog_ctrlOutput[out].c_str(), fileName.c_str());
-            
+
             LDSP_cleanupCtrlOutputs();
             return -1;
         }
         char val[6];
         readFile >> val;
-        ctrlOutput.initialVal = atoi(val);  
+        ctrlOutput.initialVal = atoi(val);
         readFile.close();
 
         // prev value
         ctrlOutput.prevVal = 0; // the write buffer is filled with 0s and new values are only written if different from prev one
         // hence the initial value is preserved until we explicitly make a change
-        
+
         // control file
         ctrlOutput.file.open(fileName);
 
@@ -287,10 +287,10 @@ int initCtrlOutputs(string **ctrlOutputsFiles)
             ctrlOutputAutoFill_scale(out, keywords, ctrlOutputsFiles[DEVICE_CTRL_FILE][out], ctrlOutputsFiles[DEVICE_SCALE][out]);
             autoConfig_scale = true;
         }
-        
+
         // scale value
         int scaleVal;
-        string content = ctrlOutputsFiles[DEVICE_SCALE][out]; 
+        string content = ctrlOutputsFiles[DEVICE_SCALE][out];
         int isNumber = isdigit(content.c_str()[0]);
         // if this is a number, then use it as custom max value
         if(isNumber)
@@ -301,28 +301,28 @@ int initCtrlOutputs(string **ctrlOutputsFiles)
             if(!readFile.is_open())
             {
                 fprintf(stderr, "Control output \"%s\", cannot open associated max file \"%s\"\n", LDSP_analog_ctrlOutput[out].c_str(), ctrlOutputsFiles[DEVICE_SCALE][out].c_str());
-                
+
                 LDSP_cleanupCtrlOutputs();
                 return -1;
             }
             readFile >> val;
-            scaleVal = atoi(val);  
+            scaleVal = atoi(val);
             readFile.close();
         }
-        
-        // assign scale value               
+
+        // assign scale value
         ctrlOutput.scaleVal = scaleVal;
 
         if(ctrlOutputsVerbose)
         {
             printf("\t%s configured!\n", LDSP_analog_ctrlOutput[out].c_str());
-            
+
             string automatic = "";
             if(autoConfig_ctrl)
                 automatic = " (set automatically)";
             printf("\t\tcontrol file \"%s\"%s\n", ctrlOutputsFiles[DEVICE_CTRL_FILE][out].c_str(), automatic.c_str());
-            
-            // we skip this info if vibration, as reading about the default scale value may be confusing  
+
+            // we skip this info if vibration, as reading about the default scale value may be confusing
             if(out!=chn_cout_vibration)
             {
                 if(isNumber)
@@ -358,7 +358,7 @@ int initCtrlOutputs(string **ctrlOutputsFiles)
 
 void writeCtrlOutputs()
 {
-    //VIC output values are persistent! 
+    //VIC output values are persistent!
     // we don't reset the output buffers once written to the devices
     // but we keep track of last value set and do not write again if same as requested value
     // NOTE: the only exception is vibration control, that is timed, so its value is reset to 0 once written
@@ -367,7 +367,7 @@ void writeCtrlOutputs()
     for(int out=0; out<chn_cout_count; out++)
     {
         ctrlout_struct *ctrlOutput = &ctrlOutputsContext.ctrlOutputs[out];
-        
+
         // nothing to do on non-configured devices
         if(!ctrlOutput->configured)
             continue;
@@ -381,7 +381,7 @@ void writeCtrlOutputs()
         write(&ctrlOutput->file, outInt);
 
         // vibration is timed based and the value that we write is the duration of vibration
-        // once vibration ends, the written file goes automatically to zero 
+        // once vibration ends, the written file goes automatically to zero
         // hence, we reset the value in our buffer once written, to align with the file's behavior
         // this allows us to set vibration repeatedly regardless of previous value
         if(out == chn_cout_vibration)

@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -40,11 +40,11 @@ void LDSP_initSensors(LDSPinitSettings *settings)
 
     if(sensorsVerbose)
         printf("\nLDSP_initSensors()\n");
-    
+
 
     initSensors();
     initSensorBuffers();
-    
+
     // update context
     intContext.sensors = sensorsContext.sensorBuffer;
     intContext.controlSampleRate = (int)(settings->samplerate / settings->periodSize);
@@ -118,10 +118,10 @@ void initSensors()
         LDSP_sensor sensor_type = (LDSP_sensor::_enum)LDSP_sensor::_from_index(i);
         const ASensor *sensor = ASensorManager_getDefaultSensor(sensor_manager, sensor_type);
         sensor_struct& sens_struct = sensorsContext.sensors[i];
-        
+
         sens_struct.numOfChannels = atoi(sensors_channelsInfo[i][0].c_str());
 
-        if (sensor == NULL) 
+        if (sensor == NULL)
         {
             // skip sensor
             sens_struct.present = false;
@@ -129,18 +129,18 @@ void initSensors()
             if(sensorsVerbose)
                 printf("\t%s not present ):\n", sensor_type._to_string());
         }
-        else 
+        else
         {
             // fill sensor struct
             sens_struct.asensor = sensor;
             sens_struct.present = true;
             sens_struct.type = ASensor_getType(sensor);
             sens_struct.channels = (sensorChannel*) new unsigned int[sens_struct.numOfChannels];
-            for(int chn=0; chn<sens_struct.numOfChannels; chn++) 
+            for(int chn=0; chn<sens_struct.numOfChannels; chn++)
                 sens_struct.channels[chn] = (sensorChannel)channelIndex++;
 
             sensorsContext.sensorsType_index[sens_struct.type] = i; // to quickly find this sensors in array
-            
+
             if(sensorsVerbose)
             {
                 printf("\t%s present!\n", sensor_type._to_string());
@@ -148,13 +148,13 @@ void initSensors()
                 printf("\t\tresolution: %f\n", ASensor_getResolution(sensor));
                 printf("\t\tmax rate: %f\n", 1.0/ASensor_getMinDelay(sensor));
             }
-        
+
             ASensorEventQueue_enableSensor(event_queue, sensor);
             ASensorEventQueue_setEventRate(event_queue, sensor, 1); // symbolic 1 us sampling period... to make sure we request max rate
             //VIC there is an android API function that is supposed to return the min period supported, ASensor_getMinDelay()
             // but the doc says its value is often an underestimation: https://developer.android.com/ndk/reference/group/sensor#asensoreventqueue_seteventrate
         }
-        
+
         //sensorsContext.channelCount += sens_struct.numOfChannels;
     }
 }
@@ -163,11 +163,11 @@ void initSensorBuffers()
 {
     // allocate buffers for sensor input samples
     sensorsContext.sensorBuffer  = new float[chn_sens_count]; // we allocate elements also for supported but non present sensors
-    sensorsContext.sensorsStates = new sensorState[chn_sens_count]; 
+    sensorsContext.sensorsStates = new sensorState[chn_sens_count];
     sensorsContext.sensorsDetails  = new string[chn_sens_count];
     //sensorsContext.sensorsNormalFactors  = new float[chn_sens_count];
 
-    // initialize 
+    // initialize
     int chnCnt = 0;
     // for each supported sensor...
     for(int sens=0; sens<sensorsContext.sensorsCount; sens++)
@@ -179,7 +179,7 @@ void initSensorBuffers()
         string descr = sensors_channelsInfo[sens][1];
         string delimiter = ", ";
         size_t pos = 0;
-        
+
         // for each channel in the sensor...
         for(int chn=0; chn<sens_struct->numOfChannels; chn++)
         {
@@ -197,7 +197,7 @@ void initSensorBuffers()
             pos = descr.find(delimiter); // channel decsriptions are separated by ", "
             string chnDescr = descr.substr(0, pos);
             descr = descr.substr(pos + delimiter.length());
-    
+
             sensorsContext.sensorsDetails[chnCnt] = name + ", sensing " + chnDescr;
 
             // init normalization factor
@@ -222,9 +222,9 @@ void initSensorBuffers()
 void readSensors()
 {
     ASensorEvent event;
-    
+
     // get most current events, if any
-    while(ASensorEventQueue_getEvents(event_queue, &event, 1) > 0) 
+    while(ASensorEventQueue_getEvents(event_queue, &event, 1) > 0)
     {
         int idx = sensorsContext.sensorsType_index[event.type]; // get index of sensors of this type
         sensor_struct& sensor = sensorsContext.sensors[idx]; // get sensor of this type
@@ -256,7 +256,7 @@ void readSensors()
         //     float b = sensorsContext.sensorBuffer[sensor.channels[1]];
         //     float c = sensorsContext.sensorBuffer[sensor.channels[2]];
         //     printf("sensor: %f, %f, %f\n", a, b, c);
-        // }  
+        // }
 
         // if(event.type == ASENSOR_TYPE_LIGHT)
         // {

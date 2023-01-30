@@ -1,6 +1,6 @@
 // This file contains functions adapted from the source code of the AOSP tool 'getevent':
 // https://android.googlesource.com/platform/system/core.git/+/refs/heads/master/toolbox/getevent.c
-// Modifications carried out by Victor Zappi
+// Modifications carried out by LDSP team
 
 #include "ctrlInputs.h"
 #include "LDSP.h"
@@ -88,7 +88,7 @@ void LDSP_initCtrlInputs(LDSPinitSettings *settings)
     intContext.ctrlInputsDetails = ctrlInputsContext.ctrlInDetails;
     intContext.mtInfo = &ctrlInputsContext.mtInfo;
     //VIC user context is reference of this internal one, so no need to update it
-        
+
     // run thread that monitors devices for events, only if we gound at least one device that raises events we are interested into
     if(ctrlInputsContext.inputsCount > 0)
         pthread_create(&ctrlInput_thread, NULL, ctrlInputs_loop, NULL);
@@ -122,46 +122,46 @@ void* ctrlInputs_loop(void* arg)
     struct input_event event;
     int slot = 0;
     unordered_map<unsigned short, unordered_map<int, int> > &event_map = ctrlInputsContext.ctrlInputsEvent_channel;
-    
+
     set_priority(CtrlInputsLoopPrioOrder, false);
 
-    while(!gShouldStop) 
+    while(!gShouldStop)
     {
         int pollres = poll(ufds, nfds, 1);
         if(pollres>0)
         {
-            for(int i = 0; i < nfds; i++) 
+            for(int i = 0; i < nfds; i++)
             {
-                if(ufds[i].revents) 
+                if(ufds[i].revents)
                 {
-                    if(ufds[i].revents & POLLIN) 
+                    if(ufds[i].revents & POLLIN)
                     {
                         int res = read(ufds[i].fd, &event, sizeof(event));
-                        if(res < (int)sizeof(event)) 
+                        if(res < (int)sizeof(event))
                         {
                             //fprintf(stderr, "could not get event\n");
                             continue;
                         }
-                        
+
                         //VIC unfortunately, this has to be done explicitly
                         if(event.code == ABS_MT_SLOT)
                         {
                             slot = event.value;
                             continue;
                         }
-                        
+
                         // let's check if the event that we received is among those that we want to store
-                        // even if we are monitoring only the devices that send the events we are interested into, 
+                        // even if we are monitoring only the devices that send the events we are interested into,
                         // it does not mean that such devices could not raise additional/unwanted events!
                         if( event_map.find(event.type) != event_map.end() )  // only correct types
                         {
-                            unordered_map<int, int> &code_map = event_map[event.type];    
+                            unordered_map<int, int> &code_map = event_map[event.type];
                             if (code_map.find(event.code) != code_map.end() ) // only correct codes
                             {
                                 // let's restrieve associated ctrl input structure, via the associated channel
                                 int chn = code_map[event.code];
                                 ctrlInput_struct &ctrlIn = ctrlInputsContext.ctrlInputs[chn];
-                                
+
                                 // only multievent ctrl inputs have more slots to store parallel events
                                 int idx=0;
                                 if(ctrlIn.isMultiInput)
@@ -187,14 +187,14 @@ bool checkEvents(int fd, int print_flags, const char *device, const char *name, 
     ssize_t bits_size = 0;
     //const char* label;
     int res;
-    
+
     //printf("  events:\n");
     // skip EV_SYN since we cannot query its available codes
-    for(int event = EV_KEY; event <= EV_MAX; event++) 
-    { 
+    for(int event = EV_KEY; event <= EV_MAX; event++)
+    {
         int count = 0;
         //while(1) //VIC we can never be cautious enough...
-        while(!gShouldStop) 
+        while(!gShouldStop)
         {
             res = ioctl(fd, EVIOCGBIT(event, bits_size), bits);
             if(res < bits_size)
@@ -208,21 +208,21 @@ bool checkEvents(int fd, int print_flags, const char *device, const char *name, 
         // switch(event) {
         //     case EV_KEY:
         //         label = "EV_KEY";
-                
+
         //         break;
         //     case EV_ABS:
         //         label = "EV_ABS";
-                
+
         //         break;
         //     default:
         //         label = "???";
         // }
-        for(int j = 0; j < res; j++) 
+        for(int j = 0; j < res; j++)
         {
             for(int k = 0; k < 8; k++)
             {
-                if(bits[j] & 1 << k) 
-                {   
+                if(bits[j] & 1 << k)
+                {
                     if(event!=EV_KEY && event!=EV_ABS)
                         return false;
 
@@ -232,11 +232,11 @@ bool checkEvents(int fd, int print_flags, const char *device, const char *name, 
                     //     printf("\n               ");
                     int code = j * 8 + k;
                     // printf(" %04x", code);
-     
+
                     unordered_map<unsigned short, unordered_map<int, int> > &event_map = ctrlInputsContext.ctrlInputsEvent_channel;
-                    if(event_map.find(event) != event_map.end()) 
+                    if(event_map.find(event) != event_map.end())
                     {
-                        unordered_map<int, int> &code_map = event_map[event];    
+                        unordered_map<int, int> &code_map = event_map[event];
 
                         if(event != EV_ABS)
                         {
@@ -260,18 +260,18 @@ bool checkEvents(int fd, int print_flags, const char *device, const char *name, 
                                 info.first = device;
                                 info.second = name;
                                 devinfo[chn].push_back(info);
-                            }      
+                            }
                         }
                         else
                         {
                             struct input_absinfo abs;
-                            if(ioctl(fd, EVIOCGABS(j * 8 + k), &abs) == 0) 
+                            if(ioctl(fd, EVIOCGABS(j * 8 + k), &abs) == 0)
                             {
                                 // printf(" : value %d, min %d, max %d, fuzz %d, flat %d, resolution %d",
                                 //     abs.value, abs.minimum, abs.maximum, abs.fuzz, abs.flat,
                                 //     abs.resolution);
 
-                                // all multitouch events 
+                                // all multitouch events
                                 if(code_map.find(code) != code_map.end())
                                 {
                                     to_monitor = true; // yes, we will monitor this device, because it raises multitouch events we are interested into
@@ -336,22 +336,22 @@ int openCtrlInputDev(const char *device, int print_flags, DevInfo *devinfo) {
     struct input_id id;
 
     fd = open(device, O_RDONLY | O_CLOEXEC);
-    if(fd < 0) 
+    if(fd < 0)
     {
         close(fd);
         if(print_flags & PRINT_DEVICE_ERRORS)
             fprintf(stderr, "could not open %s, %s\n", device, strerror(errno));
         return -1;
     }
-    
-    if(ioctl(fd, EVIOCGVERSION, &version)) 
+
+    if(ioctl(fd, EVIOCGVERSION, &version))
     {
         close(fd);
         if(print_flags & PRINT_DEVICE_ERRORS)
             fprintf(stderr, "could not get driver version for %s, %s\n", device, strerror(errno));
         return -1;
     }
-    if(ioctl(fd, EVIOCGID, &id)) 
+    if(ioctl(fd, EVIOCGID, &id))
     {
         close(fd);
         if(print_flags & PRINT_DEVICE_ERRORS)
@@ -361,7 +361,7 @@ int openCtrlInputDev(const char *device, int print_flags, DevInfo *devinfo) {
     name[sizeof(name) - 1] = '\0';
     location[sizeof(location) - 1] = '\0';
     idstr[sizeof(idstr) - 1] = '\0';
-    if(ioctl(fd, EVIOCGNAME(sizeof(name) - 1), &name) < 1) 
+    if(ioctl(fd, EVIOCGNAME(sizeof(name) - 1), &name) < 1)
     {
         //fprintf(stderr, "could not get device name for %s, %s\n", device, strerror(errno));
         name[0] = '\0';
@@ -424,7 +424,7 @@ int openCtrlInputDev(const char *device, int print_flags, DevInfo *devinfo) {
     ufds[nfds].events = POLLIN;
     device_names[nfds] = strdup(device);
     nfds++;
-    
+
 
     return 0;
 }
@@ -454,7 +454,7 @@ int openCtrlInputDevices(const char *dirname, int print_flags, DevInfo *devinfo)
             opened++;
     }
     closedir(dir);
-    
+
     // signal if cannot open any
     return (opened>0) ? 0 : -1;
 }
@@ -467,7 +467,7 @@ int initCtrlInputs()
     DevInfo devinfo[chn_cin_count];
 
     int res = openCtrlInputDevices(ctrlInput_devPath, print_flags, devinfo);
-    if(res < 0) 
+    if(res < 0)
     {
         fprintf(stderr, "Opening control input devices - scan dir failed for %s\n", ctrlInput_devPath);
         return -1;
@@ -496,7 +496,7 @@ int initCtrlInputs()
                 printf("\t%s not supported\n", LDSP_ctrlInput[i].c_str());
                 continue;
             }
-            
+
             printf("\t%s supported!\n", LDSP_ctrlInput[i].c_str());
             if(ctrlIn.isMultiInput)
                 printf("\t\tup to %d parallel inputs\n", ctrlInputsContext.mtInfo.touchSlots);
@@ -541,10 +541,10 @@ void closeCtrlInputDevice(int dev)
 
 void closeCtrlInputDevices()
 {
-    for(int i = 0; i < nfds; i++) 
+    for(int i = 0; i < nfds; i++)
         closeCtrlInputDevice(i);
-    
-    free(ufds);   
+
+    free(ufds);
 }
 
 void readCtrlInputs()
@@ -556,7 +556,7 @@ void readCtrlInputs()
     for(int chn=0; chn<offset; chn++) // includes chn_mt_anyTouch
     {
         if(ctrlInputsContext.ctrlInputs[chn].supported)
-            ctrlInputsContext.ctrlInBuffer[chn] = ctrlInputsContext.ctrlInputs[chn].value[0]->load();   
+            ctrlInputsContext.ctrlInBuffer[chn] = ctrlInputsContext.ctrlInputs[chn].value[0]->load();
     }
 
     int touchSlots = ctrlInputsContext.mtInfo.touchSlots;
@@ -567,6 +567,6 @@ void readCtrlInputs()
 
         for(int slot=0; slot<touchSlots; slot++)
             ctrlInputsContext.ctrlInBuffer[offset+chn*touchSlots+slot] = ctrlInputsContext.ctrlInputs[offset+chn].value[slot]->load();
-        
-    }    
+
+    }
 }

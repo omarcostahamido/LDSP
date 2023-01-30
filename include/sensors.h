@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -56,23 +56,23 @@ ENUM(LDSP_sensor, short,
 // AND
 // sensorChannel enum in LDSP.h [each LDSP_sensor entry has to correspond to 1 or mulitple sensorChannel enum entry, according to number of channels set in here]
 static const string sensors_channelsInfo[LDSP_sensor::count][2] = {
-    {"3", "acceleration on x [m/s^2], acceleration on y [m/s^2], acceleration on z [m/s^2]"}, // accelerometer 
+    {"3", "acceleration on x [m/s^2], acceleration on y [m/s^2], acceleration on z [m/s^2]"}, // accelerometer
     {"3", "magentic field on x [uT], magentic field on y [uT], magentic field on z [uT]"}, // magnetometer
     {"3", "rate of rotation around x [rad/s], rate of rotation around y [rad/s], rate of rotation around z [rad/s]"}, // gyroscope
     {"1", "illuminance [lx]"}, // light
-    {"1", "distance [cm]"}  // proximity 
-}; 
+    {"1", "distance [cm]"}  // proximity
+};
 //VIC any ways to retrieve number of channels per sensor from freaking android API?!?!?
 
 // if max values are reported in here, the sensor input is normalized
 // BE CAREFUL! this has to updated manually, according to LDSP_sensor ENUMs
 // static const float sensors_max[LDSP_sensor::count] = {
 //     2*9.8,  // 2g [m/s^2]
-//     1000,   // 1000 uT      
+//     1000,   // 1000 uT
 //     -1,     // no max, no normalization
 //     -1,
 //     10
-// }; 
+// };
 
 
 struct sensor_struct {

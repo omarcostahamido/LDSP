@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -19,14 +19,14 @@
 
 
 //VIC we are using tinyalsa implementation from Android 4.0, 4.0.1, 4.0.2 [ICE_CREAM_SANDWICH], API level 14
-// apparently, this was the first android release that used tinyalsa 
+// apparently, this was the first android release that used tinyalsa
 // it sounds crazy, but by doing so we are maximizing the compatibility with old phones that still have good chips but cannot updgrade to higher android versions
 // caveats:
 // _we stick to most basic subset of tinyalsa lib functions [e.g., no params checks]
 // _we need to wrap enum pcm_format into a larger and generic container
 // because ICE_CREAM_SANDWICH has very few enum entries... and we need all those listed in version of tinyalsa of latest Android [13] to be fully compatible with newer phones too
 // in tinyalsaAudio.h and tinyalsaExtension.cpp we are re-implementing functions that are missing in old tinyalsa implementation but would be handy to use [e.g., params checks, format check]
-// luckily, we have almost all the needed functions to run a full-duplex pcm! 
+// luckily, we have almost all the needed functions to run a full-duplex pcm!
 // the newest version of tinyalsa deprecated some basic functions that we are using, but even the latest Android [13] is still tied to an old implementation where deprecation is yet to happen
 // when these new implmentaitons are adopted in android, we will have to add the new functions that replace the deprecated ones to tinyalsaAudio.h/tinyalsaExtension.cpp
 // hopefully this will happen in a far future...
@@ -87,17 +87,17 @@ void cleanupPcm(LDSPpcmContext *pcmContext);
 int initLowLevelAudioStruct(audio_struct *audio_struct);
 void deallocateLowLevelAudioStruct(audio_struct *audio_struct);
 void cleanupLowLevelAudioStruct(LDSPpcmContext *pcmContext);
-void *audioLoop(void*); 
+void *audioLoop(void*);
 
 
 int LDSP_initAudio(LDSPinitSettings *settings, void *userData)
 {
     if(!settings)
 		return -1;
-    
+
 	fullDuplex = !settings->outputOnly;
     audioVerbose = settings->verbose;
-	
+
 
     if(audioVerbose)
         printf("\nLDSP_initAudio()\n");
@@ -131,7 +131,7 @@ int LDSP_initAudio(LDSPinitSettings *settings, void *userData)
 		deallocateLowLevelAudioStruct(pcmContext.capture);
 		return -3;
 	}
-	
+
 	gFormats.clear();
 
 	// init context
@@ -147,7 +147,7 @@ int LDSP_initAudio(LDSPinitSettings *settings, void *userData)
 }
 
 int LDSP_startAudio()
-{	
+{
 	if(audioVerbose)
 	{
     	printf("\nLDSP_startAudio()\n");
@@ -158,7 +158,7 @@ int LDSP_startAudio()
 	setup(userContext, 0);
 
 	pthread_t audioThread;
-	if( pthread_create(&audioThread, nullptr, audioLoop, nullptr) ) 
+	if( pthread_create(&audioThread, nullptr, audioLoop, nullptr) )
 	{
 		fprintf(stderr, "Error:unable to create thread\n");
 		return -1;
@@ -179,7 +179,7 @@ void LDSP_cleanupAudio()
 
     cleanupLowLevelAudioStruct(&pcmContext);
     cleanupPcm(&pcmContext);
-    cleanupAudioParams(&pcmContext); 
+    cleanupAudioParams(&pcmContext);
 
 	//TODO reactivate audio server
 }
@@ -196,7 +196,7 @@ int checkAllCardParams(audio_struct *audioStruct);
 void initAudioParams(LDSPinitSettings *settings, audio_struct **audioStruct, bool is_playback)
 {
     *audioStruct = (audio_struct*) malloc(sizeof(audio_struct));
-    
+
     (*audioStruct)->card = settings->card;
     if(is_playback)
     {
@@ -218,7 +218,7 @@ void initAudioParams(LDSPinitSettings *settings, audio_struct **audioStruct, boo
     (*audioStruct)->config.period_count =settings->periodCount;
     (*audioStruct)->config.rate = settings->samplerate;
     (*audioStruct)->config.format = (pcm_format) gFormats[settings->pcmFormatString];
-    (*audioStruct)->config.silence_threshold = settings->periodSize * settings->periodCount; 
+    (*audioStruct)->config.silence_threshold = settings->periodSize * settings->periodCount;
     (*audioStruct)->config.silence_size = 0;
     (*audioStruct)->config.start_threshold = settings->periodSize;
 	(*audioStruct)->config.stop_threshold = 0;
@@ -226,17 +226,17 @@ void initAudioParams(LDSPinitSettings *settings, audio_struct **audioStruct, boo
     (*audioStruct)->pcm = nullptr;
     (*audioStruct)->fd = (int)NULL; // needs C's NULL
 
-    if( audioVerbose && 
+    if( audioVerbose &&
 		( is_playback || (!is_playback && fullDuplex) )
 	)
     {
         if(is_playback)
-            printf("Playback");    
+            printf("Playback");
         else
-            printf("Capture");    
+            printf("Capture");
         printf(" card %d, device %d\n", (*audioStruct)->card, (*audioStruct)->device);
         if(is_playback)
-            printf("\tid: %s\n", settings->deviceOutId.c_str());   
+            printf("\tid: %s\n", settings->deviceOutId.c_str());
         else
             printf("\tid: %s\n", settings->deviceInId.c_str());
 
@@ -264,7 +264,7 @@ void cleanupAudioParams(LDSPpcmContext *pcmContext)
 int initFormatFunctions(string format)
 {
     int f = gFormats[format];
-    
+
 	int err = 0;
     switch(f)
     {
@@ -311,15 +311,15 @@ int initFormatFunctions(string format)
 }
 
 int initPcm(audio_struct *audio_struct_p, audio_struct *audio_struct_c)
-{   	
-    // open playback card 
+{
+    // open playback card
 
     pcm_config *config_p = (pcm_config *)&audio_struct_p->config;
-    
+
     // open playback pcm handle
 	audio_struct_p->pcm = pcm_open(audio_struct_p->card, audio_struct_p->device, audio_struct_p->flags, config_p);
 	audio_struct_p->fd = pcm_is_ready(audio_struct_p->pcm);
-	if (!audio_struct_p->pcm || !audio_struct_p->fd) 
+	if (!audio_struct_p->pcm || !audio_struct_p->fd)
 	{
 		fprintf(stderr, "Failed to open playback pcm %u,%u. %s\n", audio_struct_p->card, audio_struct_p->device, pcm_get_error(audio_struct_p->pcm));
 		return -1;
@@ -327,14 +327,14 @@ int initPcm(audio_struct *audio_struct_p, audio_struct *audio_struct_c)
 
     //VIC only added in later versions of tinyalsa, apparently not needed though
 	// last touch for playback
-	// if(pcm_prepare(audio_struct_p->pcm) < 0) 
+	// if(pcm_prepare(audio_struct_p->pcm) < 0)
 	// {
 	// 	fprintf(stderr, "Pcm prepare error: %s\n", pcm_get_error(audio_struct_p->pcm));
 	// 	return -2;
 	// }
 
 	audio_struct_p->frameBytes = pcm_frames_to_bytes(audio_struct_p->pcm, config_p->period_size); //VIC note that we are using period size, not buffer size
-    
+
     if(audioVerbose)
 	    printf("Playback audio device opened\n");
 
@@ -342,13 +342,13 @@ int initPcm(audio_struct *audio_struct_p, audio_struct *audio_struct_c)
 
 	if(fullDuplex)
 	{
-		// open capture card 
+		// open capture card
 		pcm_config *config_c = (pcm_config *)&audio_struct_c->config;
 
 		// open capture pcm handle
 		audio_struct_c->pcm = pcm_open(audio_struct_c->card, audio_struct_c->device, audio_struct_c->flags, config_c);
 		audio_struct_c->fd = pcm_is_ready(audio_struct_c->pcm);
-		if(!audio_struct_c->pcm || !audio_struct_c->fd) 
+		if(!audio_struct_c->pcm || !audio_struct_c->fd)
 		{
 			fprintf(stderr, "Failed to open capture pcm %u,%u. %s\n", audio_struct_c->card, audio_struct_c->device, pcm_get_error(audio_struct_c->pcm));
 			return -1;
@@ -362,7 +362,7 @@ int initPcm(audio_struct *audio_struct_p, audio_struct *audio_struct_c)
 
 		if(LDSP_pcm_link(audio_struct_p, audio_struct_c) <0)
 			return -2;
-		
+
 		if(audioVerbose)
 			printf("Playback and Capture audio device linked!\n");
 	}
@@ -388,9 +388,9 @@ void closePcm(audio_struct* audio_struct, bool is_playback)
             if(audioVerbose)
             {
                 if(is_playback)
-                    printf("Playback");    
+                    printf("Playback");
                 else
-                    printf("Capture");    
+                    printf("Capture");
 			    printf(" audio device closed\n");
             }
 		}
@@ -408,14 +408,14 @@ int initLowLevelAudioStruct(audio_struct *audio_struct)
 {
 	audio_struct->rawBuffer = nullptr;
 	audio_struct->audioBuffer = nullptr;
-    
+
 	int channels = audio_struct->config.channels;
 	// to cover the case of capture when non full duplex engine
 	if(channels <=0)
 		channels = 1;
 
 	audio_struct->numOfSamples = channels*audio_struct->config.period_size;
-	
+
 	unsigned int formatBits;
 
 	// allocate buffers
@@ -451,7 +451,7 @@ int initLowLevelAudioStruct(audio_struct *audio_struct)
 	audio_struct->mask = 0x00000000;
 	for (int i = 0; i<sizeof(int)-audio_struct->bps; i++)
 		audio_struct->mask |= (0xFF000000 >> i*8);
-			
+
 	return 0;
 }
 
@@ -461,7 +461,7 @@ void deallocateLowLevelAudioStruct(audio_struct *audio_struct)
     // deallocate buffers
 	if(audio_struct->rawBuffer != nullptr)
 		free(audio_struct->rawBuffer);
-	if(audio_struct->audioBuffer != nullptr) 
+	if(audio_struct->audioBuffer != nullptr)
 		free(audio_struct->audioBuffer);
 }
 
@@ -514,15 +514,15 @@ void *audioLoop(void*)
 
 
 //VIC on android, it seems that interleaved is the only way to go
-void fromRawToFloat_int(audio_struct *audio_struct) 
+void fromRawToFloat_int(audio_struct *audio_struct)
 {
-	unsigned char *sampleBytes = (unsigned char *)audio_struct->rawBuffer; 
+	unsigned char *sampleBytes = (unsigned char *)audio_struct->rawBuffer;
 
-	for(unsigned int n=0; n<audio_struct->numOfSamples; n++) 
+	for(unsigned int n=0; n<audio_struct->numOfSamples; n++)
 	{
 			int res = byteCombine(sampleBytes, audio_struct); // function pointer, gets sample value by combining the consecutive bytes, organized in either little or big endian
 			// if retrieved value is greater than maximum value allowed within current format
-			// we have to manually complete the 2's complement 
+			// we have to manually complete the 2's complement
 			if(res>audio_struct->scaleVal)
 				res |= audio_struct->mask;
 			audio_struct->audioBuffer[n] = res/((float)(audio_struct->scaleVal)); // turn int sample into full scale normalized float
@@ -530,16 +530,16 @@ void fromRawToFloat_int(audio_struct *audio_struct)
 			sampleBytes += audio_struct->bps; // jump to next sample
 	}
 }
-void fromRawToFloat_float32(audio_struct *audio_struct) 
+void fromRawToFloat_float32(audio_struct *audio_struct)
 {
 	union {
 		float f;
 		int i;
 	} fval;
 
-	unsigned char *sampleBytes = (unsigned char *)audio_struct->rawBuffer; 
+	unsigned char *sampleBytes = (unsigned char *)audio_struct->rawBuffer;
 
-	for(unsigned int n=0; n<audio_struct->numOfSamples; n++) 
+	for(unsigned int n=0; n<audio_struct->numOfSamples; n++)
 	{
 		int res = byteCombine(sampleBytes, audio_struct); // function pointer, gets sample value by combining the consecutive bytes, organized in either little or big endian
 
@@ -554,12 +554,12 @@ void fromRawToFloat_float32(audio_struct *audio_struct)
 //VIC on android, it seems that interleaved is the only way to go
 void fromFloatToRaw_int(audio_struct *audio_struct)
 {
-	unsigned char *sampleBytes = (unsigned char *)audio_struct->rawBuffer; 
+	unsigned char *sampleBytes = (unsigned char *)audio_struct->rawBuffer;
 
-	for(unsigned int n=0; n<audio_struct->numOfSamples; n++) 
+	for(unsigned int n=0; n<audio_struct->numOfSamples; n++)
 	{
 		int res = audio_struct->scaleVal * audio_struct->audioBuffer[n]; // get actual int sample out of normalized full scale float
-		
+
 		byteSplit(sampleBytes, res, audio_struct); // function pointer, splits int into consecutive bytes in either little or big endian
 
 		sampleBytes += audio_struct->bps; // jump to next sample
@@ -575,13 +575,13 @@ void fromFloatToRaw_float32(audio_struct *audio_struct)
 		int i;
 	} fval;
 
-	unsigned char *sampleBytes = (unsigned char *)audio_struct->rawBuffer; 
+	unsigned char *sampleBytes = (unsigned char *)audio_struct->rawBuffer;
 
-	for(unsigned int n=0; n<audio_struct->numOfSamples; n++) 
+	for(unsigned int n=0; n<audio_struct->numOfSamples; n++)
 	{
 		fval.f = audio_struct->audioBuffer[n]; // safe, cos float is at least 32 bits
 		int res = fval.i; // interpret as int
-		
+
 		byteSplit(sampleBytes, res, audio_struct); // function pointer, splits int into consecutive bytes in either little or big endian
 
 		sampleBytes += audio_struct->bps; // jump to next sample
@@ -600,7 +600,7 @@ int checkCardFormats(struct pcm_params *params, unsigned int value)
 	{
 		int supported = pcm_params_format_test(params, (pcm_format)f);
 		LDSP_pcm_format ff = (LDSP_pcm_format::_enum)LDSP_pcm_format::_from_index(f);
-        string name = ff._to_string();		
+        string name = ff._to_string();
 		if(supported)
 			printf("\t\t %s: supported\n", name.c_str());
 		else
@@ -614,7 +614,7 @@ int checkCardFormats(struct pcm_params *params, unsigned int value)
 	if(mismatch>=0)
 	{
 		LDSP_pcm_format ff = (LDSP_pcm_format::_enum)LDSP_pcm_format::_from_index(value);
-        string name = ff._to_string();	
+        string name = ff._to_string();
 		fprintf(stderr, "Device does not support requested format %s!\n", name.c_str());
 		return -1;
 	}
@@ -692,12 +692,12 @@ int checkAllCardParams(audio_struct *audioStruct)
 
 // combine all the bytes [1 or more, according to format] of a sample into an integer
 // little endian -> byte_0, byte_1, ..., byte_n-1 [more common format]
-inline int byteCombine_littleEndian(unsigned char *sampleBytes, struct audio_struct* audio_struct) 
+inline int byteCombine_littleEndian(unsigned char *sampleBytes, struct audio_struct* audio_struct)
 {
 	int value = 0;
 	for (int i = 0; i<audio_struct->bps; i++)
 		value += (int) (*(sampleBytes + i)) << i * 8;  // combines each sample [which stretches over 1 or more bytes, according to format] in single integer
-		
+
 	return value;
 }
 // little endian -> byte_n-1, byte_n-2, ..., byte_0
@@ -716,8 +716,8 @@ inline void byteSplit_littleEndian(unsigned char* sampleBytes, int value, struct
 		*(sampleBytes + i) = (value >>  i * 8) & 0xff;
 }
 // little endian -> byte_n-1, byte_n-2, ..., byte_0
-inline void byteSplit_bigEndian(unsigned char *sampleBytes, int value, struct audio_struct* audio_struct) 
+inline void byteSplit_bigEndian(unsigned char *sampleBytes, int value, struct audio_struct* audio_struct)
 {
 	for (int i = 0; i <audio_struct->bps; i++)
-		*(sampleBytes + audio_struct->physBps - 1 - i) = (value >> i * 8) & 0xff; 
+		*(sampleBytes + audio_struct->physBps - 1 - i) = (value >> i * 8) & 0xff;
 }

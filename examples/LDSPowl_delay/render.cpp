@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -63,7 +63,7 @@ bool setup(LDSPcontext *context, void *userData)
     inverseSampleRate = 1.0 / context->audioSampleRate;
 
 	// smoothing filter for x-axis acceleromoter
-	// signal oversampled at audio rate 
+	// signal oversampled at audio rate
 	BiquadCoeff::Settings filterSettings;
 	filterSettings.fs = context->audioSampleRate;
 	filterSettings.type = BiquadCoeff::lowpass;
@@ -80,8 +80,8 @@ bool setup(LDSPcontext *context, void *userData)
 	filterSettings.q = 0.707;
 	filterSettings.peakGainDb = 0;
 	smoothingFilter[1] = new Biquad(filterSettings);
-	
-	// audio low pass filter 
+
+	// audio low pass filter
 	filterSettings.fs = context->audioSampleRate;
 	filterSettings.type = BiquadCoeff::lowpass;
 	filterSettings.cutoff = 20000;
@@ -91,7 +91,7 @@ bool setup(LDSPcontext *context, void *userData)
 
 	// allocate the circular buffer to contain enough samples to cover ma delay in seconds
     gDelayBuffer.resize(max_delay * context->audioSampleRate);
-    
+
 	// express current delay in samples
 	delayInSamples = delay * context->audioSampleRate;
 
@@ -114,12 +114,12 @@ void render(LDSPcontext *context, void *userData)
 	// clip retrieved values
 	acc_x = constrain(acc_x, acc_x_min, acc_x_max);
 	acc_y = constrain(acc_y, acc_y_min, acc_y_max);
-	
+
 	// acc_y mapping to cut-off, with logarithmic rescaling
 	float map_cutoff = map(smoothingFilter[1]->process(acc_y), acc_y_min, acc_x_max, map_max, map_min);
 	float cutoff = powf(M_E, map_cutoff);
 	lowPass->setFc(cutoff);
-	
+
 
 	for(int n=0; n<context->audioFrames; n++)
 	{
@@ -128,13 +128,13 @@ void render(LDSPcontext *context, void *userData)
 
 		// compute feedback via acc_x mapping
 		float feedback = map(smoothingFilter[0]->process(acc_x), acc_x_min, acc_x_max, fdbck_min, fdbck_max);
-	  
+
     	// Read the output from the buffer, at the location expressed by the read pointer
         float out = gDelayBuffer[gReadPointer]; // delay wet
-    	
+
     	// Write to the circular buffer both input and feedback
         gDelayBuffer[gWritePointer] = in + feedback * out; // overwrite the buffer at the write pointer
-    	
+
         // Increment and wrap both pointers
         gWritePointer++;
         if(gWritePointer >= gDelayBuffer.size())
@@ -142,13 +142,13 @@ void render(LDSPcontext *context, void *userData)
         gReadPointer++;
         if(gReadPointer >= gDelayBuffer.size())
         	gReadPointer = 0;
-		
+
 		// apply low-pass to wet
 		out = lowPass->process(out);
 
 		out = (out+in)*0.5; // mix wet and dry
 
-		
+
 		// audio output
 		for(int chn=0; chn<context->audioOutChannels; chn++)
 			audioWrite(context, n, chn, out);

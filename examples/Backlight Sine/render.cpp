@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -88,13 +88,13 @@ bool setup(LDSPcontext *context, void *userData)
 
     lcdLightInvSrate = 1.0 / context->controlSampleRate;
 	lcdLightPhase = 0.0;
-	
+
 	ctrlOutputWrite(context, chn_cout_ledB, on);
 
 
 	oscReceiver.setup(localPort, on_receive);
 	oscSender.setup(remotePort, remoteIp);
-	
+
 
     return true;
 }
@@ -115,7 +115,7 @@ void render(LDSPcontext *context, void *userData)
 	lcdFreqMul = map(lcdFreqMul, 0, 1, 1, 4);
 
 	//int up = buttonRead(context, chn_btn_volUp);
-	
+
 
 
 	float out, amplitude;
@@ -131,7 +131,7 @@ void render(LDSPcontext *context, void *userData)
 			phase -= 2.0f * (float)M_PI;
 
         //out = audioRead(context, n, 0)*0.1;
-		
+
 		for(int chn=0; chn<context->audioOutChannels; chn++)
             audioWrite(context, n, chn, out);
 

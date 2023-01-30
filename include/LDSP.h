@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -117,12 +117,12 @@ enum sensorChannel {
 };
 
 enum ctrlOutputChannel {
-    chn_cout_flashlight, 
+    chn_cout_flashlight,
     chn_cout_lcdBacklight,
     chn_cout_led,
     chn_cout_ledR,
     chn_cout_ledG,
-    chn_cout_ledB, 
+    chn_cout_ledB,
     chn_cout_buttonsBacklight,
     chn_cout_vibration,
     chn_cout_count
@@ -213,7 +213,7 @@ static inline string sensorsDetails(LDSPcontext *context, sensorChannel channel)
 // audioRead()
 //
 // Returns the value of the given audio input at the given frame number
-static inline float audioRead(LDSPcontext *context, int frame, int channel) 
+static inline float audioRead(LDSPcontext *context, int frame, int channel)
 {
 	return context->audioIn[frame * context->audioInChannels + channel];
 }
@@ -221,15 +221,15 @@ static inline float audioRead(LDSPcontext *context, int frame, int channel)
 // audioWrite()
 //
 // Sets a given audio output channel to a value for the current frame
-static inline void audioWrite(LDSPcontext *context, int frame, int channel, float value) 
+static inline void audioWrite(LDSPcontext *context, int frame, int channel, float value)
 {
 	context->audioOut[frame * context->audioOutChannels + channel] = value;
 }
 
 // sensorRead()
 //
-// Returns the value of the given analog input/sensor 
-static inline float sensorRead(LDSPcontext *context, sensorChannel channel) 
+// Returns the value of the given analog input/sensor
+static inline float sensorRead(LDSPcontext *context, sensorChannel channel)
 {
 	    return context->sensors[channel]; // some of these sensors may not be present or unsupported, they return 0
 }
@@ -239,7 +239,7 @@ static inline float sensorRead(LDSPcontext *context, sensorChannel channel)
 // returns sate of the sensor accessed on the given channel
 static inline sensorState sensorsState(LDSPcontext *context, sensorChannel channel)
 {
- 
+
     return context->sensorsState[channel]; // sensor present or not present on phone, or unsupported by API
 }
 
@@ -264,7 +264,7 @@ static inline string sensorsDetails(LDSPcontext *context, sensorChannel channel)
 // ctrlOutputWrite()
 //
 // Sets a given ctrl output channel to a value, that is always persistent [except for vibration]
-static inline void ctrlOutputWrite(LDSPcontext *context, ctrlOutputChannel channel, float value) 
+static inline void ctrlOutputWrite(LDSPcontext *context, ctrlOutputChannel channel, float value)
 {
     context->ctrlOutputs[channel] = value;
 }

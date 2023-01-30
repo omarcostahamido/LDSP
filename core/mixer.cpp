@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -15,13 +15,6 @@
  * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
  * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-/*
- * mixer.c
- *
- *  Created on: 2022-08-14
- *      Author: Victor Zappi
  */
 
 #include <iostream>
@@ -62,7 +55,7 @@ int LDSP_setMixerPaths(LDSPinitSettings *settings, LDSPhwConfig *hwconfig)
 {
 	if(!settings)
 		return -1;
-    
+
     mixerVerbose = settings->verbose;
 
 	if(mixerVerbose)
@@ -77,7 +70,7 @@ int LDSP_setMixerPaths(LDSPinitSettings *settings, LDSPhwConfig *hwconfig)
 
 	// open mixer
 	mix = mixer_open(settings->card);
-    if (!mix || mix == nullptr) 
+    if (!mix || mix == nullptr)
 	{
         fprintf(stderr, "Failed to open mixer\n");
 		LDSP_resetMixerPaths(hwconfig);
@@ -87,7 +80,7 @@ int LDSP_setMixerPaths(LDSPinitSettings *settings, LDSPhwConfig *hwconfig)
 
 	// use XML to load paths
 	xml_document mixer_docs[2]; // [0] -> mixer paths, [1] -> mixer volumes (optional)
-   
+
     // load the mixer paths XML file
     if(!mixer_docs[0].load_file(hwconfig->xml_paths_file.c_str()))
 	{
@@ -102,14 +95,14 @@ int LDSP_setMixerPaths(LDSPinitSettings *settings, LDSPhwConfig *hwconfig)
 			LDSP_resetMixerPaths(hwconfig);
 			return -4;
 		}
-	} 
-		
+	}
+
 
 	// always start from loading default paths
 	setDefaultMixerPath(mix, &mixer_docs[0]);
 
 
-	
+
 	// if necessary, activate devices
 	if(!hwconfig->deviceActivationCtl_p.empty())
 	{
@@ -158,7 +151,7 @@ int LDSP_setMixerPaths(LDSPinitSettings *settings, LDSPhwConfig *hwconfig)
 		if(mixerVerbose)
 			printf("Capture path loaded: \"%s\"\n", pathAlias.c_str());
 	}
-	
+
 	return 0;
 }
 
@@ -172,7 +165,7 @@ void LDSP_resetMixerPaths(LDSPhwConfig *hwconfig)
     if(mixer_docs.load_file(hwconfig->xml_paths_file.c_str()))
 		setDefaultMixerPath(mix, &mixer_docs); // deactivates devices too, if necessary on phone
 
-	if (mix != nullptr) 
+	if (mix != nullptr)
 		mixer_close(mix);
 }
 
@@ -215,13 +208,13 @@ int getDeviceInfo(string infoFilePath, string infoString, string &info)
 
 	string line;
 	// let's look for infoString, line by line
-	while(infoFile) 
+	while(infoFile)
 	{
 		getline(infoFile, line);
 		size_t pos = line.find(infoString);
 		if(pos!= string::npos)
 		{
-			info = line.substr(pos+infoString.length()); // remove substring	
+			info = line.substr(pos+infoString.length()); // remove substring
 			return 0;
 		}
 	}
@@ -264,7 +257,7 @@ int findDeviceInfo(vector<string> deviceInfoPath, string match_a, string name, s
 		}
 		// in case we are serching for an id, the actual string may have an extra (*) termination
 		// so we have to avoid an exact match search
-		
+
 		// if we get here, this is the right info file!
 		// let's extract the piece of info we are looking for and store it in value
 		ret=getDeviceInfo(path, match_b, value);
@@ -283,7 +276,7 @@ int setupDeviceNumAndId(vector<string> deviceInfoPath, int &deviceNum, int defau
 	// if device is set by name...
 	if(deviceId!="")
 	{
-		// look for device number in info files 
+		// look for device number in info files
 		string num;
 		int ret = findDeviceInfo(deviceInfoPath, "id: ", deviceId, "device: ", num);
 		if(ret!=0)
@@ -295,7 +288,7 @@ int setupDeviceNumAndId(vector<string> deviceInfoPath, int &deviceNum, int defau
 		// if device number is not set, set default using values from config file
 		if(deviceNum == -1)
 			deviceNum = defaultNum;
-		// look for device id in info files 
+		// look for device id in info files
 		string id;
 		int ret = findDeviceInfo(deviceInfoPath, "device: ", to_string(deviceNum), "id: ", id);
 		if(ret!=0)
@@ -306,7 +299,7 @@ int setupDeviceNumAndId(vector<string> deviceInfoPath, int &deviceNum, int defau
 			id = id.substr(0, len-3);
 		deviceId = id;
 	}
-	
+
 	return 0;
 }
 
@@ -315,7 +308,7 @@ int setupDevicesNumAndId(LDSPinitSettings *settings, LDSPhwConfig *hwconfig)
 	vector<string> deviceInfoPath_p;
 	vector<string> deviceInfoPath_c;
 
-	// get the paths to the info files of all devices 
+	// get the paths to the info files of all devices
 	getDeviceInfoPaths(settings->card, deviceInfoPath_p, deviceInfoPath_c);
 
 	// playback
@@ -362,9 +355,9 @@ int setCtlFromXmlNode(mixer *mx, xml_node ctl_node, bool verbose)
 
 	struct mixer_ctl *ctl = mixer_get_ctl_by_name(mx, name.c_str());
 	mixer_ctl_type ctlType  = mixer_ctl_get_type(ctl);
-	
+
 	string value = ctl_node.attribute("value").value();
-	
+
 	//VIC not sure why, but these are not recognized as mixer enums
 	if(value.compare("On") == 0)
 		value = "1";
@@ -376,14 +369,14 @@ int setCtlFromXmlNode(mixer *mx, xml_node ctl_node, bool verbose)
 		// set everything else as int
 		int id = 0;
 		// not all nodes have a declared id
-		if(!ctl_node.attribute("id").empty()) 
+		if(!ctl_node.attribute("id").empty())
 			id = ctl_node.attribute("id").as_int();
 		int intValue = atoi(value.c_str());//ctl_node.attribute("value").as_int();
 		ret += mixerCtl_setInt(mx, name.c_str(), intValue, id, verbose);
 	}
 	else //if(ctlType==MIXER_CTL_TYPE_ENUM)
 		ret += mixerCtl_setStr(mx, name.c_str(), value.c_str(), verbose);
-		
+
 	return ret;
 }
 
@@ -400,7 +393,7 @@ int setDefaultMixerPath(mixer *mx, xml_document *xml)
 		ret += setCtlFromXmlNode(mx, ctl_node, false);
 	}
 
-	return ret;	
+	return ret;
 }
 
 // first completes device activation control string and then activates device
@@ -410,7 +403,7 @@ int activateDevice(mixer *mx, string &deviceActivationCtl, string device_id, LDS
 	// in case, get rid of everything after the first space
 	size_t pos = device_id.find(" ");
 	string dev_id = device_id.substr(0, pos);
-	
+
 	// swap placeholder string with actual device id
 	string placeholder = hwconfig->device_id_placeholder;
 	pos = deviceActivationCtl.find(placeholder);
@@ -434,13 +427,13 @@ void deactivateDevice(mixer *mx, string deviceActivationCtl)
 	mixerCtl_setInt(mx, deviceActivationCtl.c_str(), 0);
 }
 
-int setPath(mixer *mx, xml_document *xml, string pathName, LDSPhwConfig *hwconfig, bool volumesPath=false) 
+int setPath(mixer *mx, xml_document *xml, string pathName, LDSPhwConfig *hwconfig, bool volumesPath=false)
 {
 	int ret = 0;
 
 	bool path_found =false;
 	xml_node path;
-	// first search for the requested path 
+	// first search for the requested path
 	for(xml_node path_node: xml->child("mixer").children("path"))
 	{
 		string pathNode_name = path_node.attribute("name").as_string();
@@ -449,7 +442,7 @@ int setPath(mixer *mx, xml_document *xml, string pathName, LDSPhwConfig *hwconfi
 			path_found = true;
 			path = path_node;
 			break;
-		}		
+		}
 	}
 
 	if(!path_found)
@@ -457,7 +450,7 @@ int setPath(mixer *mx, xml_document *xml, string pathName, LDSPhwConfig *hwconfi
 		// if we are trying to set a volume path, it is possible that the current mixer path is not associated to any volume settings
 		if(volumesPath)
 			return 0;
-		
+
 		fprintf(stderr, "Cannot find path \"%s\" in xml file %s\n", pathName.c_str(), hwconfig->xml_paths_file.c_str());
         return -1;
 	}
@@ -469,10 +462,10 @@ int setPath(mixer *mx, xml_document *xml, string pathName, LDSPhwConfig *hwconfi
 		// if it's a ctl, set it!
 		if(nodeName.compare("ctl") == 0)
 			ret += setCtlFromXmlNode(mx, inner_node, true);
-		
+
 		// if it's a path, search for its definiteion and set all ctls in it!
 		else if(nodeName.compare("path") == 0)
-			ret += setPath(mx, xml, inner_node.attribute("name").value(), hwconfig, volumesPath); 
+			ret += setPath(mx, xml, inner_node.attribute("name").value(), hwconfig, volumesPath);
 		else
 		{
 			string file = hwconfig->xml_paths_file;
@@ -482,7 +475,7 @@ int setPath(mixer *mx, xml_document *xml, string pathName, LDSPhwConfig *hwconfi
         	return -2;
 		}
 	}
-		
+
 	return ret;
 }
 

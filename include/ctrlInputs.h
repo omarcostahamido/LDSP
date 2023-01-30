@@ -1,7 +1,7 @@
 /*
  * [2-Clause BSD License]
  *
- * Copyright 2022 Victor Zappi
+ * Copyright 2022
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  *
@@ -44,7 +44,7 @@ const int chn_cin_count = chn_btn_count+chn_mt_count;
 // multiTouchInputChannel enum in LDSP.h [order]
 // note that we have an extra entry here [touch_present], that is not associated to any channel in LDSP.h
 // it is associated with a dedicated function though!
-static const string LDSP_ctrlInput[chn_cin_count] = { 
+static const string LDSP_ctrlInput[chn_cin_count] = {
     "power-button",         // up/down
     "volume-up-button",     // up/down
     "volume-down-button",   // up/down
@@ -58,7 +58,7 @@ static const string LDSP_ctrlInput[chn_cin_count] = {
     "touch-y-hover-pos",    // y pos of center of finger/tool detected above touch, can be normalized via screenHeight
     "touch-major-width",    // major axis of hovering finger/tool ellipse, can be normalized via touchWidthMax
     "touch-minor-width",    // minor axis of hovering finger/tool ellipse, can be normalized via touchWidthMax
-    "touch-pressure",       // ratio between touches_majorAxis / touches_majorWidth 
+    "touch-pressure",       // ratio between touches_majorAxis / touches_majorWidth
     "touch-id"              // to keep track of motion
 };
 
@@ -68,7 +68,7 @@ struct ctrlInput_struct {
     bool isMultiInput;
     vector< shared_ptr< atomic<signed int> > > value; // vector of atomic containers, for thread-safety
     // we have to use pointers though, because vector cannot deal with atomics directly
-}; 
+};
 
 // number of elements in vectors depends on how many slots phone supports [touchSlots]
 struct LDSPctrlInputsContext {
@@ -79,13 +79,13 @@ struct LDSPctrlInputsContext {
     // BE CAREFUL, mapping is manual!
     LDSPctrlInputsContext() : ctrlInputsEvent_channel({
         // single ctrl inputs [with queue]
-        { EV_KEY, { {KEY_POWER, chn_btn_power}, 
-                {KEY_VOLUMEUP, chn_btn_volUp}, 
+        { EV_KEY, { {KEY_POWER, chn_btn_power},
+                {KEY_VOLUMEUP, chn_btn_volUp},
                 {KEY_VOLUMEDOWN, chn_btn_volDown},
-                {BTN_TOUCH, chn_btn_count+chn_mt_anyTouch} } 
+                {BTN_TOUCH, chn_btn_count+chn_mt_anyTouch} }
         },
         // multi ctrl inputs [with vector queue]
-        { EV_ABS, { {ABS_MT_POSITION_X, chn_btn_count+chn_mt_x}, 
+        { EV_ABS, { {ABS_MT_POSITION_X, chn_btn_count+chn_mt_x},
                     {ABS_MT_POSITION_Y, chn_btn_count+chn_mt_y},
                     {ABS_MT_TOUCH_MAJOR, chn_btn_count+chn_mt_majAxis},
                     {ABS_MT_TOUCH_MINOR, chn_btn_count+chn_mt_minAxis},
